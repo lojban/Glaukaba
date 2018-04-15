@@ -1,6 +1,7 @@
 # wakautils.pl v9
 
 use strict;
+no strict 'subs';
 
 use Time::Local;
 use Socket;
@@ -314,7 +315,9 @@ sub compile_template($;$){
 
 		$html=~s/(['\\])/\\$1/g;
 		$code.="\$res.='$html';" if(length $html);
-		$args=~s/\\>/>/g;
+		if( $args ){
+			$args=~s/\\>/>/g;
+		}
 
 		if($tag){
 			if($closing){
@@ -1228,11 +1231,11 @@ sub webm_handler($$) {
 	make_error(S_GENWEBMERR) if(!%$stdout); # empty json response from ffprobe
 	make_error(S_GENWEBMERR) unless($$stdout{format}->{format_name} eq 'matroska,webm'); # invalid format
 	make_error(S_WEBMAUTIOERR) if(scalar @{$$stdout{streams}} > 1); # too many streams
-	make_error(S_GENWEBMERR) if(@{$$stdout{streams}}->[0]->{codec_name} ne 'vp8'); # stream isn't webm
-	make_error(S_GENWEBMERR) unless(@{$$stdout{streams}}->[0]->{width} and @{$$stdout{streams}}->[0]->{height});
+	make_error(S_GENWEBMERR) if(@{$$stdout{streams}}[0]->{codec_name} ne 'vp8'); # stream isn't webm
+	make_error(S_GENWEBMERR) unless(@{$$stdout{streams}}[0]->{width} and @{$$stdout{streams}}[0]->{height});
 	make_error() if(!$$stdout{format} or $$stdout{format}->{duration} > 120);
 
-	($width,$height) = (@{$$stdout{streams}}->[0]->{width},@{$$stdout{streams}}->[0]->{height});
+	($width,$height) = (@{$$stdout{streams}}[0]->{width},@{$$stdout{streams}}[0]->{height});
 	
 	# thumbnail stuff
 	($tn_width,$tn_height) = get_thumbnail_dimensions($width,$height);

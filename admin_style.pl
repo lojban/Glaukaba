@@ -1,6 +1,10 @@
 use strict;
 use POSIX qw/strftime/;
-BEGIN { require "wakautils.pl" }
+BEGIN { use File::Basename;
+	my $dirname = dirname(__FILE__);
+	chdir($dirname);
+	require "$dirname/wakautils.pl"
+}
 
 use constant MANAGER_HEAD_INCLUDE => MINIMAL_HEAD_INCLUDE.q{
 <if $admin>

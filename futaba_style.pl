@@ -1,6 +1,11 @@
 use strict;
 use POSIX qw/strftime/;
-BEGIN { require "wakautils.pl" }
+BEGIN {
+	use File::Basename;
+	my $dirname = dirname(__FILE__);
+	chdir($dirname);
+	require "$dirname/wakautils.pl"
+}
 
 use constant BOARD_OPTIONS => q{
 <if !$noextra>
@@ -176,12 +181,15 @@ use constant NORMAL_HEAD_INCLUDE => q{
 	<div style="float:right">
 		[<a href="javascript:void(0)" onclick="toggleNavMenu(this,0);">Settings</a>]
 		[<a href="//<const DOMAIN>">Home</a>]
+		[<a href="wakaba.pl?task=admin">Admin</a>]
 	</div>
 </div>
 <div class="topNavContainer">
 	}.include("include/header.html").q{
 	<div class="topNavRight">
 		<span>[<a href="javascript:void(0)" onclick="toggleNavMenu(this,0);">Settings</a>]</span>
+		<span>[<a href="//<const DOMAIN>">Home</a>]</span>
+		<span>[<a href="wakaba.pl?task=admin">Admin</a>]</span>
 	</div>
 </div>
 <div class="logo">
@@ -369,11 +377,28 @@ use constant PAGE_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 						<style type="text/css" scoped="scoped">
 							.recaptchatable{background-color:transparent!important;border:none!important;}.recaptcha_image_cell{background-color:transparent!important;padding:0px!important;padding-bottom:3px!important;}#recaptcha_div{height:107px;width:442px;}#recaptcha_challenge_field{width:400px}@media only screen and (min-width: 481px) {.recaptcha_input_area{padding:0!important;}#recaptcha_table tr:first-child{height:auto!important;}#recaptcha_table tr:first-child>td:not(:first-child){padding:0 7px 0 7px!important;}#recaptcha_table tr:last-child td:last-child{padding-bottom:0!important;}#recaptcha_table tr:last-child td:first-child{padding-left:0!important;}#recaptcha_response_field{width:292px;margin-right:0px!important;font-size:10pt!important;}input:-moz-placeholder{color:gray!important;}#recaptcha_image{border:1px solid #aaa!important;}#recaptcha_table tr>td:last-child{display:none!important;}}
 						</style>
-						<script type="text/javascript" src="//www.google.com/recaptcha/api/challenge?k=<const RECAPTCHA_PUBLIC_KEY>"></script>
+						<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+						<div class="g-recaptcha" data-sitekey="<const RECAPTCHA_PUBLIC_KEY>"></div>
 						<noscript>
-							<iframe src="//www.google.com/recaptcha/api/noscript?k=<const RECAPTCHA_PUBLIC_KEY>" height="300" width="500"></iframe><br>
-							<textarea name="recaptcha_challenge_field" rows="3" cols="40"></textarea>
-							<input type="hidden" name="recaptcha_response_field" value="manual_challenge">
+						  <div>
+						    <div style="width: 302px; height: 422px; position: relative;">
+						      <div style="width: 302px; height: 422px; position: absolute;">
+						        <iframe src="https://www.google.com/recaptcha/api/fallback?k=<const RECAPTCHA_PUBLIC_KEY>"
+						                frameborder="0" scrolling="no"
+						                style="width: 302px; height:422px; border-style: none;">
+						        </iframe>
+						      </div>
+						    </div>
+						    <div style="width: 300px; height: 60px; border-style: none;
+						                   bottom: 12px; left: 25px; margin: 0px; padding: 0px; right: 25px;
+						                   background: #f9f9f9; border: 1px solid #c1c1c1; border-radius: 3px;">
+						      <textarea id="g-recaptcha-response" name="g-recaptcha-response"
+						                   class="g-recaptcha-response"
+						                   style="width: 250px; height: 40px; border: 1px solid #c1c1c1;
+						                          margin: 10px 25px; padding: 0px; resize: none;" >
+						      </textarea>
+						    </div>
+						  </div>
 						</noscript>
 						<if PASS_ENABLED>
 							<div class="passNotice">

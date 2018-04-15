@@ -8,10 +8,14 @@ use CGI;
 use DBI;
 
 use lib '.';
-BEGIN { require "config.pl"; }
-BEGIN { require "config_defaults.pl"; }
-BEGIN { require "strings_en.pl"; }
-BEGIN { require "wakautils.pl"; }
+BEGIN { use File::Basename;
+	my $dirname = dirname(__FILE__);
+	chdir($dirname);
+	require "$dirname/config.pl";
+	require "$dirname/config_defaults.pl";
+	require "$dirname/strings_en.pl";
+	require "$dirname/wakautils.pl";
+}
 
 
 
@@ -60,6 +64,9 @@ my @background=(0xff,0xff,0xff);
 
 
 my $dbh=DBI->connect(SQL_DBI_SOURCE,SQL_USERNAME,SQL_PASSWORD,{AutoCommit=>1}) or die S_SQLCONF;
+$dbh->{'mysql_enable_utf8'} = 1;
+
+$dbh->do('SET NAMES utf8');
 init_captcha_database($dbh) unless(table_exists_captcha($dbh,SQL_CAPTCHA_TABLE));
 
 my $ip=($ENV{HTTP_CF_CONNECTING_IP} or '0.0.0.0');
@@ -184,15 +191,16 @@ sub delete_captcha_word($$$)
 #
 
 sub check_recaptcha {
-	my($challenge,$response,$ip,$preval) = @_;
+	my($response,$ip,$preval) = @_;
 	
 	eval "use Captcha::reCAPTCHA";
-	return if($@);
+	die "In check_recaptcha, an error occured: $@" if($@);
 	
 	make_error('You must enter a CAPTCHA.',$preval) unless $response;
 
-	my $c=Captcha::reCAPTCHA->new;	
-	my $result=$c->check_answer(RECAPTCHA_PRIVATE_KEY,$ip,$challenge,$response);
+	my $c=Captcha::reCAPTCHA->new;
+	my $result=$c->check_answer_v2(RECAPTCHA_PRIVATE_KEY,$response,$ip);
+	# die "In check_recaptcha, result: ".Dumper(\$result);
 	
 	return $result if $preval == 1 && $result->{is_valid};
 	
@@ -200,7 +208,7 @@ sub check_recaptcha {
 }
 
 sub prevalidate_captcha {
-	my ($dbh,$challenge,$response,$parent,$data) = @_;
+	my ($dbh,$response,$parent,$data) = @_;
 	my ($result,$sth,$row,$i,$dupe,$time,$ip,@newsessions);
 	$ip = get_ip(USE_CLOUDFLARE);
 	$time = time();
@@ -242,10 +250,10 @@ sub prevalidate_captcha {
 	make_error('You can only have one active key. Please wait up to ' . PREVAL_KEY_LIFETIME . ' seconds before posting again.' ,$data) if $dupe;
 	
 	if($data) {
-		$result = check_recaptcha($data->{challenge},$data->{response},$ip,1);
+		$result = check_recaptcha($data->{response},$ip,1);
 		
 		if($result->{is_valid}) {
-			my $session = make_session($dbh,$data->{challenge},$data->{response},$data->{parent},$ip,$time,1);
+			my $session = make_session($dbh,$data->{response},$data->{parent},$ip,$time,1);
 			
 			make_json_header();
 			print encode_string(PREVAL_RESPONSE_TEMPLATE->(
@@ -254,10 +262,10 @@ sub prevalidate_captcha {
 		}
 	}
 	else {
-		$result = check_recaptcha($challenge,$response,$ip,1);
+		$result = check_recaptcha($response,$ip,1);
 			
 		if($result->{is_valid}) {
-			my $session = make_session($dbh,$challenge,$response,$parent,$ip,$time);
+			my $session = make_session($dbh,$response,$parent,$ip,$time);
 			
 			make_cookies(
 				wakapreval=>$session->{key},
@@ -275,9 +283,9 @@ sub prevalidate_captcha {
 }
 
 sub make_session {
-	my ($dbh,$challenge,$response,$parent,$ip,$time,$json) = @_;
+	my ($dbh,$response,$parent,$ip,$time,$json) = @_;
 	my ($sth,$row);
-	my $key = crypt_password($ENV{HTTP_USER_AGENT}.$challenge,$response,$parent,$ip,$time);
+	my $key = crypt_password($ENV{HTTP_USER_AGENT}.$response,$parent,$ip,$time);
 	our @sessions;
 	
 	# we could use a users comment, name, etc for validation but it probably wouldn't make a difference in abuse

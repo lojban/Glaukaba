@@ -3,24 +3,34 @@
 use CGI::Carp qw(fatalsToBrowser);
 
 use strict;
+no strict 'subs';
 
 use CGI;
 use DBI;
+use utf8;
 
 #
 # Import settings
 #
 
-use lib '.';
-BEGIN { require "config.pl"; }
-BEGIN { require "../globalconfig.pl"; } # path to your global config file
-BEGIN { require "config_defaults.pl"; }
-BEGIN { require "strings_en.pl"; }		# edit this line to change the language
-BEGIN { require "futaba_style.pl"; }	# edit this line to change the board style
-BEGIN { require "admin_style.pl"; }
-BEGIN { require "captcha.pl"; }
-BEGIN { require "wakautils.pl"; }
-BEGIN { require "../eventhandlers.pl" if ENABLE_EVENT_HANDLERS; }
+BEGIN {
+use File::Basename;
+my $dirname = dirname(__FILE__);
+
+chdir($dirname);
+
+require "$dirname/config.pl";
+require "$dirname/../globalconfig.pl";  # path to your global config file
+require "$dirname/config_defaults.pl";
+require "$dirname/strings_en.pl";		# edit this line to change the language
+require "$dirname/futaba_style.pl"; 	# edit this line to change the board style
+require "$dirname/admin_style.pl";
+require "$dirname/captcha.pl";
+require "$dirname/wakautils.pl";
+	if ( &ENABLE_EVENT_HANDLERS ) {
+		require "$dirname/../eventhandlers.pl";
+	}
+}
 
 #
 # Optional modules
@@ -72,6 +82,10 @@ sub init(){
 	# This must be placed in here so we can spawn a new DB connection if the old one dies.
 	if($use_fastcgi) { $dbh=DBI->connect_cached(SQL_DBI_SOURCE,SQL_USERNAME,SQL_PASSWORD,{AutoCommit=>1}) or make_error(S_SQLCONF); }
 	else { $dbh=DBI->connect(SQL_DBI_SOURCE,SQL_USERNAME,SQL_PASSWORD,{AutoCommit=>1}) or make_error(S_SQLCONF); }
+
+	$dbh->{'mysql_enable_utf8'} = 1;
+
+	$dbh->do('SET NAMES utf8');
 
 	$task=($query->param("task") or $query->param("action"));
 
@@ -125,8 +139,7 @@ sub init(){
 		my $no_captcha=$query->param("no_captcha");
 		my $no_format=$query->param("no_format");
 		my $postfix=$query->param("postfix");
-		my $challenge=$query->param("recaptcha_challenge_field");
-		my $response=$query->param("recaptcha_response_field");
+		my $response=$query->param("g-recaptcha-response");
 		my $sticky=$query->param("sticky");
 		my $permasage=$query->param("permasage");
 		my $locked=$query->param("locked");
@@ -138,7 +151,7 @@ sub init(){
 		my $prevalcookie = $query->cookie("wakapreval");
 		my $prevalajax = $query->param("preval");
 
-		post_stuff($parent,$name,$email,$subject,$comment,$file,$file,$password,$nofile,$captcha,$admin,$no_captcha,$no_format,$postfix,$challenge,$response,$sticky,$permasage,$locked,$capcode,$spoiler,$nsfw,$passcookie,$ajax,$prevalcookie,$prevalajax);
+		post_stuff($parent,$name,$email,$subject,$comment,$file,$file,$password,$nofile,$captcha,$admin,$no_captcha,$no_format,$postfix,$response,$sticky,$permasage,$locked,$capcode,$spoiler,$nsfw,$passcookie,$ajax,$prevalcookie,$prevalajax);
 	}
 	elsif($task eq "delete"){
 		my $password=$query->param("password");
@@ -911,7 +924,7 @@ sub print_page($$){
 	if(USE_TEMPFILES){
 		my $tmpname=RES_DIR.'tmp'.int(rand(1000000000));
 
-		open (PAGE,">$tmpname") or make_error(S_NOTWRITE);
+		open (PAGE,">$tmpname") or make_error(S_NOTWRITE." $tmpname");
 		print PAGE $contents;
 		close PAGE;
 
@@ -919,7 +932,7 @@ sub print_page($$){
 	}
 	else
 	{
-		open (PAGE,">$filename") or make_error(S_NOTWRITE);
+		open (PAGE,">$filename") or make_error(S_NOTWRITE." $filename");
 		print PAGE $contents;
 		close PAGE;
 	}
@@ -941,7 +954,7 @@ sub build_thread_cache_all(){
 #
 
 sub post_stuff($$$$$$$$$$$$$$$$$$$$$$){
-	my ($parent,$name,$email,$subject,$comment,$file,$uploadname,$password,$nofile,$captcha,$admin,$no_captcha,$no_format,$postfix,$challenge,$response,$sticky,$permasage,$locked,$capcode,$spoiler,$nsfw,$passcookie,$ajax,$prevalcookie,$prevalajax) = @_;
+	my ($parent,$name,$email,$subject,$comment,$file,$uploadname,$password,$nofile,$captcha,$admin,$no_captcha,$no_format,$postfix,$response,$sticky,$permasage,$locked,$capcode,$spoiler,$nsfw,$passcookie,$ajax,$prevalcookie,$prevalajax) = @_;
 	my ($parent_res,$id,$class,$time,@session,@taargus);
 	
 	# get a timestamp for future use
@@ -1059,7 +1072,7 @@ sub post_stuff($$$$$$$$$$$$$$$$$$$$$$){
 		}
 		else {
 			check_captcha($dbh,$captcha,$ip,$parent) if(ENABLE_CAPTCHA ne 'recaptcha');
-			check_recaptcha($challenge,$response,$ip) if(ENABLE_CAPTCHA eq 'recaptcha');
+			check_recaptcha($response,$ip,1) if(ENABLE_CAPTCHA eq 'recaptcha');
 		}
 	}
 
@@ -1751,7 +1764,7 @@ sub process_file($$$$) {
 	$md5ctx = Digest::MD5->new unless($@);
 
 	# copy file
-	open (OUTFILE,">>$filename") or make_error(S_NOTWRITE);
+	open (OUTFILE,">>$filename") or make_error(S_NOTWRITE." $filename");
 	binmode OUTFILE;
 	while (read($file,$buffer,1024)) {
 		print OUTFILE $buffer;

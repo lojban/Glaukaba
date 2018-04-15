@@ -9,10 +9,8 @@
 #
 
 # System config
-#use constant BOARD_DIR => '';					# This board's directory. Leaving this blank enables single board mode
-#use constant NUKE_PASS => '';					# Password to nuke a board. Change this too, NOW!
-#use constant SECRET => '';						# Cryptographic secret. CHANGE THIS to something totally random, and long.
-#use constant SQL_TABLE => 'comments';			# Table (NOT DATABASE) used by image board. Please change the value for each board
+use constant BOARD_DIR => 'jbo';					# This board's directory. Leaving this blank enables single board mode
+use constant SQL_TABLE => 'jbo_comments';			# Table (NOT DATABASE) used by image board. Please change the value for each board
 
 # None of the options in this block need changing. Just uncomment them. I'll figure out a more elagant way to handle this stuff another day.
 #
@@ -23,28 +21,30 @@
 #
 #
 
+
 #use constant USE_TEMPFILES => 1;				# Set this to 1 under Unix and 0 under Windows! (Use tempfiles when creating pages)
 
 # Page look
-#use constant TITLE => '';						# Name of this image board
+use constant TITLE => '/jbo/ - jbotcan';	# Name of this image board
 #use constant SUBTITLE => '';
-#use constant SHOWTITLETXT => 1;				# Show TITLE at top (1: yes  0: no)
-#use constant SHOWTITLEIMG => 0;				# Show image at top (0: no, 1: single, 2: rotating)
-#use constant TITLEIMG => '';					# Title image (point to a script file if rotating)
-#use constant FAVICON => 'favicon.ico';			# Favicon.ico file
-#use constant HOME => '../';					# Site home directory (up one level by default
-#use constant IMAGES_PER_PAGE => 15;			# Images per page
-#use constant REPLIES_PER_THREAD => 5;			# Replies shown
+use constant SHOWTITLETXT => 1;				# Show TITLE at top (1: yes  0: no)
+use constant SHOWTITLEIMG => 1;				# Show image at top (0: no, 1: single, 2: rotating)
+use constant TITLEIMG => 'lojban.jpg';			# Title image (point to a script file if rotating)
+use constant FAVICON => 'lojban.ico';			# Favicon.ico file
+use constant HOME => '/';					# Site home directory (up one level by default
+use constant IMAGES_PER_PAGE => 30;			# Images per page
+use constant REPLIES_PER_THREAD => 3;			# Replies shown
+use constant S_ANONAME => 'cmecau';			# Defines what to print if there is no text entered in the name field
 #use constant IMAGE_REPLIES_PER_THREAD => 0;	# Number of image replies per thread to show, set to 0 for no limit.
-#use constant S_ANONAME => 'Anonymous';			# Defines what to print if there is no text entered in the name field
 #use constant S_ANOTEXT => '';					# Defines what to print if there is no text entered in the comment field
 #use constant S_ANOTITLE => '';					# Defines what to print if there is no text entered into subject field
 #use constant SILLY_ANONYMOUS => '';			# Make up silly names for anonymous people (0 or '': don't display, any combination of 'day' or 'board': make names change for each day or board, 'static': static names)
 #use constant DEFAULT_STYLE => 'Yotsuba B';		# Title of the default style for the board.
+use constant DEFAULT_STYLE => 'Lojban';		# Title of the default style for the board.
 #use constant SOCIAL => 0;						# Disabled by default
 
 # Limitations
-#use constant MAX_KB => 5000;					# Maximum upload size in KB
+use constant MAX_KB => 5125;					# Maximum upload size in KB
 #use constant MAX_W => 250;						# Images exceeding this width will be thumbnailed
 #use constant MAX_H => 250;						# Images exceeding this height will be thumbnailed
 #use constant MAX_RES => 9000;					# Maximum topic bumps
@@ -60,17 +60,15 @@
 #use constant MAX_IMAGE_PIXELS => 50000000;		# Maximum width*height of image before rejecting
 
 # Captcha
-#use constant ENABLE_CAPTCHA => '';				# You can choose between built in 'captcha', 'recaptcha', or none at all (default = none)
-#use constant SQL_CAPTCHA_TABLE => 'captcha';	# Use a different captcha table for each board, if you have more than one!
-#use constant CAPTCHA_LIFETIME => 1440;			# Captcha lifetime in seconds
-#use constant CAPTCHA_SCRIPT => 'captcha.pl';
-#use constant CAPTCHA_HEIGHT => 18;
-#use constant CAPTCHA_SCRIBBLE => 0.2;
-#use constant CAPTCHA_SCALING => 0.15;
-#use constant CAPTCHA_ROTATION => 0.3;
-#use constant CAPTCHA_SPACING => 2.5;
-#use constant RECAPTCHA_PRIVATE_KEY => '';
-#use constant RECAPTCHA_PUBLIC_KEY => '';
+use constant ENABLE_CAPTCHA => 'recaptcha';				# You can choose between built in 'captcha', 'recaptcha', or none at all (default = none)
+use constant SQL_CAPTCHA_TABLE => 'captcha';	# Use a different captcha table for each board, if you have more than one!
+use constant CAPTCHA_LIFETIME => 1440;			# Captcha lifetime in seconds
+use constant CAPTCHA_SCRIPT => 'captcha.pl';
+use constant CAPTCHA_HEIGHT => 18;
+use constant CAPTCHA_SCRIBBLE => 0.2;
+use constant CAPTCHA_SCALING => 0.15;
+use constant CAPTCHA_ROTATION => 0.3;
+use constant CAPTCHA_SPACING => 2.5;
 
 # Load Balancing
 #use constant ENABLE_LOAD => 0;					# Enable the distribution of image files across multiple hosts (0: no, 1: yes). May not work on a windows host. Do not enable if using STUPID_THUMBNAILING.
@@ -87,16 +85,16 @@
 
 # Tweaks
 #use constant THUMBNAIL_SMALL => 1;				# Thumbnail small images (1: yes, 0: no)
-#use constant THUMBNAIL_QUALITY => 60;			# Thumbnail JPEG quality
+use constant THUMBNAIL_QUALITY => 100;			# Thumbnail JPEG quality
 #use constant DELETED_THUMBNAIL => '';			# Thumbnail to show for deleted images (leave empty to show text message)
 #use constant DELETED_IMAGE => '';				# Image to link for deleted images (only used together with DELETED_THUMBNAIL)
 #use constant ALLOW_TEXTONLY => 1;				# Allow textonly posts (1: yes, 0: no)
 #use constant ALLOW_IMAGES => 1;				# Allow image posting (1: yes, 0: no)
 #use constant ALLOW_TEXT_REPLIES => 1;			# Allow replies (1: yes, 0: no)
 #use constant ALLOW_IMAGE_REPLIES => 1;			# Allow replies with images (1: yes, 0: no)
-#use constant ALLOW_UNKNOWN => 0;				# Allow unknown filetypes (1: yes, 0: no)
-#use constant MUNGE_UNKNOWN => '.unknown';		# Munge unknown file type extensions with this. If you remove this, make sure your web server is locked down properly.
-#use constant FORBIDDEN_EXTENSIONS => ('php','php3','php4','phtml','shtml','cgi','pl','pm','py','r','exe','dll','scr','pif','asp','cfm','jsp','vbs'); # file extensions which are forbidden
+use constant ALLOW_UNKNOWN => 1;				# Allow unknown filetypes (1: yes, 0: no)
+use constant MUNGE_UNKNOWN => '';		# Munge unknown file type extensions with this. If you remove this, make sure your web server is locked down properly.
+use constant FORBIDDEN_EXTENSIONS => ('php','php3','php4','phtml','shtml','cgi','pl','pm','py','r','exe','dll','scr','pif','asp','cfm','jsp','vbs'); # file extensions which are forbidden
 #use constant RENZOKU => 5;						# Seconds between posts (floodcheck)
 #use constant RENZOKU2 => 10;					# Seconds between image posts (floodcheck)
 #use constant RENZOKU3 => 900;					# Seconds between identical posts (floodcheck)
@@ -104,9 +102,9 @@
 #use constant USE_SECURE_ADMIN => 1;			# Use HTTPS for the admin panel.
 #use constant CHARSET => 'utf-8';				# Character set to use, typically 'utf-8' or 'shift_jis'. Disable charset handling by setting to ''. Remember to set Apache to use the same character set for .html files! (AddCharset shift_jis html)
 #use constant CONVERT_CHARSETS => 1;			# Do character set conversions internally
-#use constant TRIM_METHOD => 0;					# Which threads to trim (0: oldest - like futaba 1: least active - furthest back)
-#use constant ARCHIVE_MODE => 0;				# Old images and posts are moved into an archive dir instead of deleted (0: no 1: yes). It is HIGHLY RECOMMENDED you use TRIM_METHOD => 1 with this, or you may end up with unreferenced pictures in your archive
-#use constant DATE_STYLE => 'futaba';			# Date style ('futaba', '2ch', 'localtime', 'tiny')
+use constant TRIM_METHOD => 1;					# Which threads to trim (0: oldest - like futaba 1: least active - furthest back)
+use constant ARCHIVE_MODE => 1;				# Old images and posts are moved into an archive dir instead of deleted (0: no 1: yes). It is HIGHLY RECOMMENDED you use TRIM_METHOD => 1 with this, or you may end up with unreferenced pictures in your archive
+use constant DATE_STYLE => 'lojban';			# Date style ('futaba', '2ch', 'localtime', 'tiny')
 #use constant DISPLAY_ID => 'mask';				# How to display user IDs (0 or '': don't display,
 												#  'day' and 'board' in any combination: make IDs change for each day or board,
 												#  'mask': display masked IP address (similar IPs look similar, but are still encrypted)
